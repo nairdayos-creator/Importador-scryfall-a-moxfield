@@ -9,13 +9,17 @@
             margin: 50px auto;
         }
 
-        input, button {
+        input {
             width: 100%;
             padding: 10px;
             margin-top: 10px;
+            box-sizing: border-box;
         }
 
         button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
             background: #4CAF50;
             color: white;
             font-weight: bold;
@@ -29,11 +33,21 @@
 
         .error {
             color: red;
+            margin-top: 10px;
         }
 
         .hint {
             color: gray;
             font-size: 12px;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .spacer {
+            height: 10px;
         }
     </style>
 </head>
@@ -46,23 +60,30 @@
 Ejemplo: set:khm o type:dragon
 </p>
 
-<!-- FORM PRINCIPAL (CSV) -->
-<form method="POST">
-    <input type="text" name="query" placeholder="Ej: type:squirrel (game:paper) legal:commander rarity:c prefer:best" required>
-
-    <button type="submit">Exportar CSV</button>
-</form>
-
-<!-- FORM SECUNDARIO (TXT) -->
-<form method="POST" action="/txt">
-    <input type="text" name="query" placeholder="(misma búsqueda que arriba)" required>
-    <button type="submit">Exportar TXT (Decklist)</button>
-</form>
-
-<!-- ERROR -->
 {% if error %}
 <p class="error">{{ error }}</p>
 {% endif %}
+
+<div class="container">
+
+    <!-- INPUT ÚNICO -->
+    <form method="POST">
+        <input type="text" name="query" placeholder="Introduce tu búsqueda (Scryfall syntax)" required>
+
+        <div class="spacer"></div>
+
+        <!-- BOTÓN CSV -->
+        <button type="submit" formaction="/">
+            Exportar CSV (Colección)
+        </button>
+
+        <!-- BOTÓN TXT -->
+        <button type="submit" formaction="/txt">
+            Exportar TXT (Decklist)
+        </button>
+    </form>
+
+</div>
 
 </body>
 </html>

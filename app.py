@@ -90,8 +90,10 @@ def index():
         if not query:
             return render_template("index.html", error="Introduce una búsqueda")
 
-        csv_file = generate_csv(query)
+csv_file = generate_csv(query)
 
+if csv_file is None:
+    return render_template("index.html", error="No se ha encontrado nada con esa búsqueda")
         return Response(
             csv_file,
             mimetype="text/csv",

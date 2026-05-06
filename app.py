@@ -39,7 +39,6 @@ def fetch_all_cards(query):
     while True:
         resp = requests.get(url, params=params)
 
-        # No resultados en Scryfall
         if resp.status_code == 404:
             return
 
@@ -58,7 +57,7 @@ def fetch_all_cards(query):
 
 
 # ----------------------------
-# GENERATE CSV
+# CSV EXPORT (COLECCIÓN)
 # ----------------------------
 def generate_csv(query):
     output = io.StringIO()
@@ -93,7 +92,26 @@ def generate_csv(query):
 
 
 # ----------------------------
-# ROUTE
+# TXT EXPORT (DECKLIST)
+# ----------------------------
+def generate_txt(query):
+    lines = []
+    card_count = 0
+
+    for card in fetch_all_cards(query):
+        name = card.get("name")
+        if name:
+            lines.append(f"1 {name}")
+            card_count += 1
+
+    if card_count == 0:
+        return None
+
+    return "\n".join(lines)
+
+
+# ----------------------------
+# ROUTE PRINCIPAL (CSV)
 # ----------------------------
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -123,6 +141,36 @@ def index():
         )
 
     return render_template("index.html")
+
+
+# ----------------------------
+# NUEVA RUTA TXT (DECKLIST)
+# ----------------------------
+@app.route("/txt", methods=["POST"])
+def export_txt():
+    query = request.form.get("query", "").strip()
+
+    if not query:
+        return render_template(
+            "index.html",
+            error="Introduce una búsqueda"
+        )
+
+    txt_data = generate_txt(query)
+
+    if txt_data is None:
+        return render_template(
+            "index.html",
+            error="No se ha encontrado nada con esa búsqueda"
+        )
+
+    return Response(
+        txt_data,
+        mimetype="text/plain",
+        headers={
+            "Content-Disposition": "attachment; filename=decklist.txt"
+        }
+    )
 
 
 # ----------------------------

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file, Response
+from flask import Flask, render_template, request, Response
 import requests
 import csv
 import time
@@ -24,18 +24,25 @@ FIELDNAMES = [
     "Purchase Price"
 ]
 
+# ----------------------------
+# FETCH CARDS
+# ----------------------------
 def fetch_all_cards(query):
     params = {
         "q": query,
         "unique": "cards",
         "format": "json"
     }
+
     url = BASE_URL
 
     while True:
         resp = requests.get(url, params=params)
+
+        # No resultados en Scryfall
         if resp.status_code == 404:
-            return  # no hay resultados
+            return
+
         resp.raise_for_status()
         data = resp.json()
 
@@ -50,6 +57,9 @@ def fetch_all_cards(query):
         time.sleep(0.2)
 
 
+# ----------------------------
+# GENERATE CSV
+# ----------------------------
 def generate_csv(query):
     output = io.StringIO()
     writer = csv.DictWriter(output, fieldnames=FIELDNAMES)
@@ -76,24 +86,34 @@ def generate_csv(query):
         card_count += 1
 
     if card_count == 0:
-        return None  # señal de “no hay resultados”
+        return None
 
     output.seek(0)
     return output
 
 
+# ----------------------------
+# ROUTE
+# ----------------------------
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
-        query = request.form.get("query")
+        query = request.form.get("query", "").strip()
 
         if not query:
-            return render_template("index.html", error="Introduce una búsqueda")
+            return render_template(
+                "index.html",
+                error="Introduce una búsqueda"
+            )
 
-csv_file = generate_csv(query)
+        csv_file = generate_csv(query)
 
-if csv_file is None:
-    return render_template("index.html", error="No se ha encontrado nada con esa búsqueda")
+        if csv_file is None:
+            return render_template(
+                "index.html",
+                error="No se ha encontrado nada con esa búsqueda"
+            )
+
         return Response(
             csv_file,
             mimetype="text/csv",
@@ -105,5 +125,8 @@ if csv_file is None:
     return render_template("index.html")
 
 
+# ----------------------------
+# RUN (LOCAL ONLY)
+# ----------------------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)

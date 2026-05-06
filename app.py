@@ -34,6 +34,8 @@ def fetch_all_cards(query):
 
     while True:
         resp = requests.get(url, params=params)
+        if resp.status_code == 404:
+            return  # no hay resultados
         resp.raise_for_status()
         data = resp.json()
 
@@ -53,6 +55,8 @@ def generate_csv(query):
     writer = csv.DictWriter(output, fieldnames=FIELDNAMES)
     writer.writeheader()
 
+    card_count = 0
+
     for card in fetch_all_cards(query):
         writer.writerow({
             "Count": 1,
@@ -69,6 +73,10 @@ def generate_csv(query):
             "Proxy": "",
             "Purchase Price": ""
         })
+        card_count += 1
+
+    if card_count == 0:
+        return None  # señal de “no hay resultados”
 
     output.seek(0)
     return output

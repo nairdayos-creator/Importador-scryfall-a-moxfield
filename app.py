@@ -37,13 +37,34 @@ def fetch_all_cards(query):
     url = BASE_URL
 
     while True:
-        resp = requests.get(url, params=params)
+    headers = {
+        "User-Agent": "ExportadorcitoMTG/1.0",
+        "Accept": "application/json"
+    }
 
-        if resp.status_code == 404:
-            return
+    try:
+        resp = requests.get(
+            url,
+            params=params,
+            headers=headers,
+            timeout=30
+        )
+    except requests.exceptions.RequestException as e:
+        app.logger.error("Error conectando con Scryfall: %s", e)
+        raise
 
+    if resp.status_code == 404:
+        return
+
+    if not resp.ok:
+        app.logger.error(
+            "Scryfall devolvió HTTP %s: %s",
+            resp.status_code,
+            resp.text
+        )
         resp.raise_for_status()
-        data = resp.json()
+
+    data = resp.json()
 
         for card in data.get("data", []):
             yield card
